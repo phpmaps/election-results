@@ -4,7 +4,7 @@ The Election Results application is a configuration of ArcGIS Server and a HTML 
 
 [Try the Election Results application](http://localgovtemplates2.esri.com/electionresults/)
 
-[![Image of Election Results application](https://raw.github.com/Esri/election-polling-places/master/election-polling-places.png "Election Results application")](http://localgovtemplates2.esri.com/electionresults/)
+[![Image of Election Results application](https://raw.github.com/Esri/election-results/master/election-results.png "Election Results application")](http://localgovtemplates2.esri.com/electionresults/)
 
 ## Features
 
