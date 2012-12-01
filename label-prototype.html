@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Label Prototype | Make so Portable to Election App</title>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.2/js/dojo/dijit/themes/tundra/tundra.css">
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.2/js/esri/css/esri.css" />
+    
+    <style>
+      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+      #map{ margin: 0; padding: 0; }
+      #feedback {
+        position: absolute;
+        height: 330px;
+        font-family: arial;
+        margin: 5px;
+        padding: 5px;
+        z-index: 40;
+        background: #fff;
+        color: #444;
+        width: 300px;
+        right: 30px;
+        bottom: 30px;
+        -moz-box-shadow: 0 0 5px #888;
+        -webkit-box-shadow: 0 0 5px #888;
+        box-shadow: 0 0 5px #888;
+      }
+      #county { 
+        padding: 5px 0 0 0;
+        font-weight: 700;
+      }
+      h3 { margin: 0 0 5px 0; border-bottom: 1px solid #444; }
+    </style>
+    <script>var dojoConfig = { parseOnLoad: true };</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.2"></script>
+    <script>
+      dojo.require("dijit.layout.BorderContainer");
+      dojo.require("dijit.layout.ContentPane");
+      dojo.require("dojox.widget.AnalogGauge");
+      dojo.require("dojox.widget.gauge.AnalogArcIndicator");
+      dojo.require("esri.map");
+      dojo.require("esri.tasks.query");
+      dojo.require("esri.layers.FeatureLayer");
+      
+      XMin: -362063
+      YMin: 527703
+      XMax: 133141
+      YMax: 1248422
+
+      var app = {};
+      function init() {
+      
+      	////****SET UP PROXY****////
+      	//Proxy type ashx
+      	//esri.config.defaults.io.proxyUrl = "/arcgisserver/apis/javascript/proxy/proxy.ashx";
+      	//Proxy type php
+      	esri.config.defaults.io.proxyUrl = "/php/proxy.php";
+      	
+      	
+        app.map = new esri.Map("map", {
+            "extent": new esri.geometry.Extent({"xmin":-362063,"ymin":527703,"xmax":133141,"ymax":1248422,"spatialReference":{"wkid":102100}})
+        });
+        var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer");
+        app.map.addLayer(basemap);
+        
+        app.geometryService = new esri.tasks.GeometryService("http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+        var presidentofGhana2008 = "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/0";
+        var constituency = "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/2";
+        var outFields = ["OBJECTID","PRECINCTID","NAME","TOWNSHIP","WINPARTY08","TOTBALLOTS","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","CANDIDATE2","PARTY2","NUMVOTES2","PERCVOTE2","CANDIDATE3","PARTY3","NUMVOTES3","PERCVOTE3","CANDIDATE4","PARTY4","NUMVOTES4","PERCVOTE4","CANDIDATE5","PARTY5","NUMVOTES5","PERCVOTE5","CANDIDATE6","PARTY6","NUMVOTES6","PERCVOTE6","CANDIDATE7","PARTY7","NUMVOTES7","PERCVOTE7","CANDIDATE8","PARTY8","NUMVOTES8","PERCVOTE8","LASTUPDATE"];
+        var outFieldsConstituency = ["OBJECTID","AREA","PERIMETER","NAME","COUNTY","PrecintID","CONSTITUEN","DISTRICT","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","PARTY2","NUMVOTES2","PERCVOTE2","VALID","REJECTS","TOTBALLOTS","REGVOTERS","PERCVOTE","PERCREJT","SHAPE_Leng","WINPARTY","LASTUPDATE","TOWNSHIP","CANDIDATE2","FillTransparency","OutlineTransparency","Label"];
+        app.constituencyLyr = new esri.layers.FeatureLayer(constituency, {
+        	"maxAllowableOffset": maxOffset(),
+        	"mode": esri.layers.FeatureLayer.MODE_ONDEMAND,
+        	"outFields": outFieldsConstituency
+      	});
+        
+        dojo.connect(app.constituencyLyr,'onLoad',detailedFeatureLayerAction);
+        
+        var outline = new esri.symbol.SimpleLineSymbol()
+              .setColor(dojo.colorFromHex("#fff"));
+        app.sym = new esri.symbol.SimpleFillSymbol()
+              .setColor(new dojo.Color([52, 67, 83, 0.4]))
+              .setOutline(outline);
+        var renderer = new esri.renderer.SimpleRenderer(app.sym);
+
+        var hColor = dojo.colorFromHex("#ff3");
+        var hOutline = new esri.symbol.SimpleLineSymbol()
+              .setColor(hColor).setWidth(4);
+        app.highlight = new esri.symbol.SimpleFillSymbol()
+              .setColor(new dojo.Color([0, 0, 0, 0]))
+              .setOutline(hOutline);
+        
+        //NOTE: Probably not needed......but may be useful...
+        var queryTask = new esri.tasks.QueryTask(constituency);
+        var query = new esri.tasks.Query();
+        query.returnGeometry = false;
+        query.outFields = outFieldsConstituency;
+        queryTask.execute(query, handleQuery);
+        app.constituencyLyr.setRenderer(renderer);
+
+        dojo.connect(app.constituencyLyr, "onMouseOver", showInfo);
+        
+        //NOTE:  This may be needed to get meaningful lable names when doing the client side query with labelpoint
+        //dojo.connect(app.constituencyLyr, "onSelectionComplete", placeLabel);
+
+        app.map.addLayer(app.constituencyLyr);
+
+        dojo.connect(app.map, 'onLoad', function() {
+          dojo.connect(dijit.byId('map'), 'resize', app.map, app.map.resize);
+        });
+
+        dojo.connect(app.map, 'onZoomEnd', function() {
+          app.constituencyLyr.setMaxAllowableOffset(maxOffset());
+        });
+        
+    	dojo.connect(app.map, "onExtentChange", function(extent){
+        	//TODO - Check scale onExtentChange adding if, else if, else to display lable graphiclayer 
+        	//detailedFeatureLayerAction has minScale , maxScale check for those values
+        	//if in range 
+        	var scale = esri.geometry.getScale(app.map);
+        });
+
+        // create the gauge
+        //createGauge(dojo.byId("gauge"), 0);
+      }
+      
+      function placeLabel() {
+    	  var scale = esri.geometry.getScale(app.map);
+      }
+      
+      function detailedFeatureLayerAction(fl) {
+      	//TODO : Make fl var to a global or a property of app so it can be used in other functions
+    	fl.minScale = 900000;
+      	fl.maxScale = 100000;
+      	var query = new esri.tasks.Query();
+      	query.where = "1=1";
+      	query.outFields = [ "*" ];
+      	var geoms = [];
+      	
+      	//TODO:  Move below feature layer query logic to  dojo.connect onExtentChange callback in init() 
+      	//so getLabelPoints only get called in a scale dependent fashion
+      	
+      	fl.queryFeatures(query, function(featureSet) {
+      		dojo.forEach(featureSet.features,function(feature){
+	            geoms.push(feature.geometry);
+            });
+      	getLabelPoints(geoms);
+      	});
+      	
+      }
+      
+      function getLabelPoints(geometries) {
+    	  app.geometryService.labelPoints(geometries, function(labelPoints) { // callback
+	          var font = new esri.symbol.Font("20px", esri.symbol.Font.STYLE_NORMAL, esri.symbol.Font.VARIANT_NORMAL, esri.symbol.Font.WEIGHT_BOLDER);
+	          dojo.forEach(labelPoints, function(labelPoint) {
+	          
+	          	//TODO - Probably need to do a client side selection against the detailedFeautreLayer (the election layer) 
+	          	//using the labelpoint as the geometry, so we can get meaningful label names instead of x, y coords...
+	          	 
+	            // create a text symbol
+	            var textSymbol = new esri.symbol.TextSymbol(
+	              "X: " + dojo.number.format(labelPoint.x) + ", Y: " + dojo.number.format(labelPoint.y),
+	              font, new dojo.Color([0, 0, 0])
+	            );
+	
+	            var labelPointGraphic = new esri.Graphic(labelPoint,textSymbol);
+	
+	            // add the label point graphic to the map
+	            app.map.graphics.add(labelPointGraphic);
+	          });
+	      });
+       }
+      
+      function processLabels(labelPoints) {
+    	  var font = new esri.symbol.Font("20px", esri.symbol.Font.STYLE_NORMAL, esri.symbol.Font.VARIANT_NORMAL, esri.symbol.Font.WEIGHT_BOLDER);
+    	  dojo.forEach(labelPoints, function(labelPoint) {
+ 		     var textSymbol = new esri.symbol.TextSymbol(
+ 		       "X: " + dojo.number.format(labelPoint.x) + ", Y: " + dojo.number.format(labelPoint.y),
+ 		       font, new dojo.Color([0, 0, 0])
+ 		     );
+ 		     var labelPointGraphic = new esri.Graphic(labelPoint,textSymbol);
+ 		     app.map.graphics.add(labelPointGraphic);
+ 		   });
+      }
+
+      function showInfo(evt) {
+        app.map.graphics.clear();
+        app.map.graphics.add(
+          new esri.Graphic(
+            evt.graphic.geometry, 
+            app.highlight
+          )
+        );
+        updateGauge(evt.graphic);
+      }
+
+      function createGauge(gdiv, startValue) {
+        var indicator = new dojox.widget.gauge.AnalogArcIndicator({
+          interactionMode: "gauge",
+          noChange: false,
+          value: startValue,
+          width: 20,
+          offset: 65,
+          color: "#ff3",
+          title: "value",
+          hideValue: true,
+          duration: 100 // default is 1000
+        });
+
+        app.gauge = new dojox.widget.AnalogGauge({
+          background: [200, 200, 200, 0.0],
+          width: parseInt(gdiv.style.width),
+          height: parseInt(gdiv.style.height),
+          cx: parseInt(gdiv.style.width) / 2, 
+          cy: parseInt(gdiv.style.height) * .75,
+          style: "position: absolute;",
+          radius: parseInt(gdiv.style.width) / 2, 
+          useTooltip: false,
+          ranges: [{ low: 0, high: 100, color: "rgba(255,0,0,0)" }],
+          majorTicks: { offset: 90, interval: 25, length: 3, color: 'black' },
+          indicators: [ indicator ]
+
+        }, dojo.create("div", null, gdiv));
+        app.gauge.startup();
+
+        // add percent label
+        app.percentDiv = dojo.create("div",{
+          "innerHTML": "0%",
+          "style": {
+            "position": "absolute",
+            "bottom": app.gauge.height - app.gauge.cy + "px",
+            "left": "-1000px",
+            "font-family": "verdana",
+            "font-size": "24px",
+            "color":"#000"
+          }
+        });
+        dojo.place(app.percentDiv, app.gauge.domNode);
+      }
+
+      //var outFieldsConstituency = ["OBJECTID","AREA","PERIMETER","NAME","COUNTY","PrecintID","CONSTITUEN","DISTRICT","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","PARTY2","NUMVOTES2","PERCVOTE2","VALID","REJECTS","TOTBALLOTS","REGVOTERS","PERCVOTE","PERCREJT","SHAPE_Leng","WINPARTY","LASTUPDATE","TOWNSHIP","CANDIDATE2","FillTransparency","OutlineTransparency","Label"];
+      function updateGauge(g) {
+    	dojo.byId("name").innerHTML = g.attributes.NAME;
+        dojo.byId("county").innerHTML = "<br />" + 
+        g.attributes.PARTY1 + ":" + dojo.number.format(g.attributes.PERCVOTE1) + "%" +
+        "<br />" + 
+        g.attributes.PARTY2 + ":" + dojo.number.format(g.attributes.PERCVOTE2) + "%" +
+        "<br />" + 
+        "Valid:" + dojo.number.format(g.attributes.VALID) + 
+        "<br />" +
+        "Rejected:" + dojo.number.format(g.attributes.REJECTS) + 
+        "<br />";
+      }
+
+      function handleQuery(result) {
+        console.log('pop query...', result);
+        app.maxPop = result.features[0].attributes.maxPop;
+      }
+
+      function maxOffset() {
+        return (app.map.extent.getWidth() / app.map.width);
+      }
+
+      dojo.ready(init);
+    </script>
+  </head>
+
+  <body class="tundra">
+    <div data-dojo-type="dijit.layout.BorderContainer"
+         data-dojo-props="design:'headline',gutters:false"
+         style="width: 100%; height: 100%; margin: 0;">
+      <div id="map"
+           data-dojo-type="dijit.layout.ContentPane"
+           data-dojo-props="region:'center'">
+
+        <div id="feedback">
+          <h3 id="name"></h3>
+          <div id="info"> </div>
+          <div id="county"></div>
+          <div id="gauge" style="position:absolute; width: 290px; height: 230px;"></div>
+          
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+ 
