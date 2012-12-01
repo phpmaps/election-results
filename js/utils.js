@@ -1,20 +1,4 @@
-﻿/** @license
- | Version 10.1.1
- | Copyright 2012 Esri
- |
- | Licensed under the Apache License, Version 2.0 (the "License");
- | you may not use this file except in compliance with the License.
- | You may obtain a copy of the License at
- |
- |    http://www.apache.org/licenses/LICENSE-2.0
- |
- | Unless required by applicable law or agreed to in writing, software
- | distributed under the License is distributed on an "AS IS" BASIS,
- | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- | See the License for the specific language governing permissions and
- | limitations under the License.
- */
-var difference;
+﻿var difference;
 var isOrientationChanged = false;
 
 //function to handle orientation change event handler
@@ -50,7 +34,7 @@ function orientationChanged() {
     }
 }
 
-//function to get the extent based on the mappoint
+//function to get the extent based on the mappoint 
 function GetBrowserMapExtent(mapPoint) {
     var width = map.extent.getWidth();
     var height = map.extent.getHeight();
@@ -175,7 +159,7 @@ function SetHeightRepresentativeResults() {
     CreateScrollbar(dojo.byId("divRepresentativeDataScrollContainer"), dojo.byId("divRepresentativeScrollContent"));
 }
 
-//function to show progress indicator
+//function to show progress indicator 
 function ShowProgressIndicator(nodeId) {
     dojo.byId('divLoadingIndicator').style.display = "block";
 }
@@ -583,7 +567,7 @@ function CreateScrollbar(container, content) {
     function touchEndHandler(e) {
         scrollingTimer = setTimeout(function () { clearTimeout(scrollingTimer); scrolling = false; }, 100);
     }
-    //touch scrollbar end
+    //touch scrollbar end 
 }
 
 //Function for refreshing address container div
@@ -830,19 +814,19 @@ function ShowBarChart(jsonValues, chartDiv, myLabelSeriesarray, myParallelLabelS
     barChart.addAxis("x",
   { stroke: "white",
       includeZero: true,
-      minorTicks: false,
+      minorTicks: true,
       majorTickStep: 25,
       majorLabels: true,
       minorLabels: false,
       fontColor: "white",
-      microTicks: false,
+      microTicks: true,
       //      from: 0, to: 100,
       min: 25, max: 100
   });
 
     barChart.addAxis("y",
     { labels: myLabelSeriesarray,
-        fontColor: "white",
+        fontColor: "red",
         stroke: "white",
         natural: false, majorTickStep: 1, minorTicks: false,
         fixUpper: false,
@@ -851,7 +835,7 @@ function ShowBarChart(jsonValues, chartDiv, myLabelSeriesarray, myParallelLabelS
 
     barChart.addAxis("other x", { leftBottom: false, labels: false });
 
-    barChart.addAxis("other y", { vertical: true,
+    barChart.addAxis("other y", { vertical: true, labels:true,
         leftBottom: false,
         fontColor: "white",
         minorTicks: false,
@@ -972,6 +956,38 @@ function CreateDynamicMapServiceLayer(layerId, layerURL) {
         });
     }
     return dynamicMapService;
+}
+
+//Function to create Feature map services
+
+function CreateFeatureLayer(layerId, layerURL) {
+    //var imageParams = new esri.layers.ImageParameters();
+    var lastindex = layerURL.lastIndexOf('/');
+    var layerIndex = layerURL.substr(lastindex + 1)
+	var featureMapService;
+    //imageParams.layerIds = [layerURL.substr(lastindex + 1)];
+    //imageParams.layerOption = esri.layers.ImageParameters.LAYER_OPTION_SHOW;
+    if (layerId) {
+        //var featLayer = layerURL.substring(0, lastindex);
+        featureMapService = new esri.layers.FeatureLayer(layerURL, {
+            id: layerId,
+            opacity: 0.6,
+			outFields: ["*"],
+			mode: esri.layers.FeatureLayer.MODE_ONDEMAND,
+            visible: true
+        });
+    }
+    else {
+        var featLayer = layerURL;
+        imageParams.layerIds = [0];
+        featureMapService = new esri.layers.FeatureLayer(featLayer, {
+            opacity: 1,
+			outFields: ["*"],
+			mode: esri.layers.FeatureLayer.MODE_ONDEMAND,
+            visible: true
+        });
+    }
+    return featureMapService;
 }
 
 //function to show Dynamic map service
