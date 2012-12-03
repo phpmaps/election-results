@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Label Prototype | Make so Portable to Election App</title>
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.2/js/dojo/dijit/themes/tundra/tundra.css">
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.2/js/esri/css/esri.css" />
+    
+    <style>
+      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+      #map{ margin: 0; padding: 0; }
+      #feedback {
+        position: absolute;
+        height: 330px;
+        font-family: arial;
+        margin: 5px;
+        padding: 5px;
+        z-index: 40;
+        background: #fff;
+        color: #444;
+        width: 300px;
+        right: 30px;
+        bottom: 30px;
+        -moz-box-shadow: 0 0 5px #888;
+        -webkit-box-shadow: 0 0 5px #888;
+        box-shadow: 0 0 5px #888;
+      }
+      #county { 
+        padding: 5px 0 0 0;
+        font-weight: 700;
+      }
+      h3 { margin: 0 0 5px 0; border-bottom: 1px solid #444; }
+    </style>
+    <script>var dojoConfig = { parseOnLoad: true };</script>
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.2"></script>
+    <script>
+      dojo.require("dijit.layout.BorderContainer");
+      dojo.require("dijit.layout.ContentPane");
+      dojo.require("dojox.widget.AnalogGauge");
+      dojo.require("dojox.widget.gauge.AnalogArcIndicator");
+      dojo.require("esri.map");
+      dojo.require("esri.tasks.query");
+      dojo.require("esri.layers.FeatureLayer");
+
+      var app = {};
+      function init() {
+      
+      	////****SET UP PROXY****////
+      	//Proxy type ashx
+      	//esri.config.defaults.io.proxyUrl = "/arcgisserver/apis/javascript/proxy/proxy.ashx";
+      	//Proxy type php
+      	esri.config.defaults.io.proxyUrl = "/php/proxy.php";
+      	
+      	
+        app.map = new esri.Map("map", {
+            "extent": new esri.geometry.Extent({"xmin":-362063,"ymin":527703,"xmax":133141,"ymax":1248422,"spatialReference":{"wkid":102100}})
+        });
+        var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer");
+        app.map.addLayer(basemap);
+        
+        app.geometryService = new esri.tasks.GeometryService("http://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+        var presidentofGhana2008 = "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/0";
+        app.constituencyUrl = "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/2";
+        var outFields = ["OBJECTID","PRECINCTID","NAME","TOWNSHIP","WINPARTY08","TOTBALLOTS","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","CANDIDATE2","PARTY2","NUMVOTES2","PERCVOTE2","CANDIDATE3","PARTY3","NUMVOTES3","PERCVOTE3","CANDIDATE4","PARTY4","NUMVOTES4","PERCVOTE4","CANDIDATE5","PARTY5","NUMVOTES5","PERCVOTE5","CANDIDATE6","PARTY6","NUMVOTES6","PERCVOTE6","CANDIDATE7","PARTY7","NUMVOTES7","PERCVOTE7","CANDIDATE8","PARTY8","NUMVOTES8","PERCVOTE8","LASTUPDATE"];
+        var outFieldsConstituency = ["OBJECTID","AREA","PERIMETER","NAME","COUNTY","PrecintID","CONSTITUEN","DISTRICT","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","PARTY2","NUMVOTES2","PERCVOTE2","VALID","REJECTS","TOTBALLOTS","REGVOTERS","PERCVOTE","PERCREJT","SHAPE_Leng","WINPARTY","LASTUPDATE","TOWNSHIP","CANDIDATE2","FillTransparency","OutlineTransparency","Label"];
+        app.constituencyLyr = new esri.layers.FeatureLayer(app.constituencyUrl, {
+        	"maxAllowableOffset": maxOffset(),
+        	"mode": esri.layers.FeatureLayer.MODE_ONDEMAND,
+        	"outFields": outFieldsConstituency
+      	});
+        
+        dojo.connect(app.constituencyLyr,'onLoad',detailedFeatureLayerAction);
+        
+        var outline = new esri.symbol.SimpleLineSymbol()
+              .setColor(dojo.colorFromHex("#fff"));
+        app.sym = new esri.symbol.SimpleFillSymbol()
+              .setColor(new dojo.Color([52, 67, 83, 0.4]))
+              .setOutline(outline);
+        var renderer = new esri.renderer.SimpleRenderer(app.sym);
+        app.constituencyLyr.setRenderer(renderer);
+
+        var hColor = dojo.colorFromHex("#ff3");
+        var hOutline = new esri.symbol.SimpleLineSymbol()
+              .setColor(hColor).setWidth(4);
+        app.highlight = new esri.symbol.SimpleFillSymbol()
+              .setColor(new dojo.Color([0, 0, 0, 0]))
+              .setOutline(hOutline);
+
+        dojo.connect(app.constituencyLyr, "onMouseOver", showInfo);
+        app.map.addLayer(app.constituencyLyr);
+
+        dojo.connect(app.map, 'onLoad', function() {
+          dojo.connect(dijit.byId('map'), 'resize', app.map, app.map.resize);
+        });
+
+        dojo.connect(app.map, 'onZoomEnd', function() {
+          app.constituencyLyr.setMaxAllowableOffset(maxOffset());
+        });
+        
+    	dojo.connect(app.map, "onExtentChange", function(extent){
+        	var scale = esri.geometry.getScale(app.map);
+        	console.log("scale: " + scale);
+        	
+        	if(scale > 900000) {
+        		console.log("if: " + scale);
+        		if(app.map.getLayer("Labels900000") != null){
+        			app.labels900000.hide();
+        		}
+        		
+        	}else if(scale <= 900000 && scale >=10000) {
+        		window.setTimeout(function() {
+        			getConstituencyLabels()
+    			}, 2000);
+        		if(app.map.getLayer("Labels900000") != null){
+        			app.labels900000.show();
+        		}
+        		
+        	}else{
+        		console.log("else " + scale);
+        		if(app.map.getLayer("Labels900000") != null){
+        			app.labels900000.hide();
+        		}
+        	}
+        });
+      }
+      
+      function getConstituencyLabels(){
+      	var query = new esri.tasks.Query();
+      	query.returnGeometry = false;
+      	var queryExtent = app.map.extent;
+      	query.geometry = queryExtent;
+      	app.constituencyLyr.queryFeatures(query, handleQuery);
+      }
+      
+      function containsId(gLayer, item){
+        var array = getGraphicsOids(gLayer);
+        require(["dojo/_base/array"], function(array){
+        	function contains(arr, item){
+        		return array.indexOf(arr, item) >= 0;
+        	}
+		});
+      }
+      
+      function getGraphicsOids(gLayer){
+      	switch(gLayer.id)
+		{
+			case "Labels900000":
+				if(app.labels900000 != null) {
+					return app.labels900000;
+      			}else{
+      				app.labels900000 = [];
+      				dojo.forEach(gLayer.graphics, function(graphic) {
+      					app.labels900000.push(graphic.attributes.OID);
+      				});
+      				return app.labels900000;
+      			}
+  				break;
+			case "Labels1200000":
+  				break;
+			default:
+				console.log("default case.");
+		}      	
+      }
+      
+      function detailedFeatureLayerAction(fl) {
+      	//TODO : Set up detailed Feature Layer scale dependency
+      	app.detailedFeatureLayer = fl;
+    	//app.detailedFeatureLayer.minScale = 900000;
+      	//app.detailedFeatureLayer.maxScale = 250000;
+      }
+      
+      function addConstituencyLabels(geometries) {
+      	if(app.labels900000 == null) {       		
+      		app.labels900000 = new esri.layers.GraphicsLayer({id:"Labels900000"});
+      		app.map.addLayer(app.labels900000);
+        	app.labels900000.show();
+      	}
+    	  app.geometryService.labelPoints(geometries, function(labelPoints) { // callback
+	          var font = new esri.symbol.Font("20px", esri.symbol.Font.STYLE_NORMAL, esri.symbol.Font.VARIANT_NORMAL, esri.symbol.Font.WEIGHT_BOLDER);
+	          dojo.forEach(labelPoints, function(labelPoint) {
+		      	var selectionQuery = new esri.tasks.Query();
+		      	selectionQuery.returnGeometry = false;
+        		var tol = app.map.extent.getWidth()/app.map.width * 5;
+       			var x = labelPoint.x;
+        		var y = labelPoint.y;
+        		var queryExtent = new esri.geometry.Extent(x-tol,y-tol,x+tol,y+tol,labelPoint.spatialReference);
+        		selectionQuery.geometry = queryExtent;
+        		
+        		app.constituencyLyr.queryFeatures(selectionQuery, function(fset) {
+	            	if(containsId(app.labels900000, fset.features[0].attributes.OBJECTID) == true){ //Prevent adding duplicate labels to map
+	            		return;
+	            	}
+	            	var font = new esri.symbol.Font("10px", esri.symbol.Font.STYLE_NORMAL, esri.symbol.Font.VARIANT_NORMAL, esri.symbol.Font.WEIGHT_BOLDER);
+        			console.log(fset.features[0].attributes.NAME);
+        			var textSymbol = new esri.symbol.TextSymbol(fset.features[0].attributes.NAME,font, new dojo.Color([0, 0, 0]));
+	            	var graphic = new esri.Graphic(labelPoint,textSymbol);
+	            	graphic.setAttributes( {"OID":fset.features[0].attributes.OBJECTID});
+	            	app.labels900000.add(graphic);
+	            	
+        		}); 
+	          });
+	          
+	          
+	      });
+       }
+
+      function showInfo(evt) {
+        app.map.graphics.clear();
+        app.map.graphics.add(
+          new esri.Graphic(
+            evt.graphic.geometry, 
+            app.highlight
+          )
+        );
+        updateGauge(evt.graphic);
+      }
+
+
+      //var outFieldsConstituency = ["OBJECTID","AREA","PERIMETER","NAME","COUNTY","PrecintID","CONSTITUEN","DISTRICT","CANDIDATE1","PARTY1","NUMVOTES1","PERCVOTE1","PARTY2","NUMVOTES2","PERCVOTE2","VALID","REJECTS","TOTBALLOTS","REGVOTERS","PERCVOTE","PERCREJT","SHAPE_Leng","WINPARTY","LASTUPDATE","TOWNSHIP","CANDIDATE2","FillTransparency","OutlineTransparency","Label"];
+      function updateGauge(g) {
+    	dojo.byId("name").innerHTML = g.attributes.NAME;
+        dojo.byId("county").innerHTML = "<br />" + 
+        g.attributes.PARTY1 + ":" + dojo.number.format(g.attributes.PERCVOTE1) + "%" +
+        "<br />" + 
+        g.attributes.PARTY2 + ":" + dojo.number.format(g.attributes.PERCVOTE2) + "%" +
+        "<br />" + 
+        "Valid:" + dojo.number.format(g.attributes.VALID) + 
+        "<br />" +
+        "Rejected:" + dojo.number.format(g.attributes.REJECTS) + 
+        "<br />";
+      }
+
+      function handleQuery(featureSet) {
+        var geoms = [];
+        dojo.forEach(featureSet.features,function(feature){
+        	geoms.push(feature.geometry);
+        });
+        addConstituencyLabels(geoms);
+      }
+
+      function maxOffset() {
+        return (app.map.extent.getWidth() / app.map.width);
+      }
+
+      dojo.ready(init);
+    </script>
+  </head>
+
+  <body class="tundra">
+    <div data-dojo-type="dijit.layout.BorderContainer"
+         data-dojo-props="design:'headline',gutters:false"
+         style="width: 100%; height: 100%; margin: 0;">
+      <div id="map"
+           data-dojo-type="dijit.layout.ContentPane"
+           data-dojo-props="region:'center'">
+
+        <div id="feedback">
+          <h3 id="name"></h3>
+          <div id="info"> </div>
+          <div id="county"></div>
+          <div id="gauge" style="position:absolute; width: 290px; height: 230px;"></div>
+          
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+ 
