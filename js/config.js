@@ -42,13 +42,13 @@ dojo.declare("js.config", null, {
     // GENERAL SETTINGS
     // -----------------------------------------------------------------------------------------------------------------------
     // Set application title
-    ApplicationName: "Election Results",
+    ApplicationName: "Ghana Presidential Elections Constituency Level",
 
     // Set application icon path
-    ApplicationIcon: "images/logo.png",
+    ApplicationIcon: "images/Joy1.png",
 
     // Set splash window content - Message that appears when the application starts
-    SplashScreenMessage: "<b>Election Results</b> <br/> <hr/> <br/> The <b>Election Results</b> application provides election results information to the general public and other interested parties. It offers a map-based view of results tabulated on election night and allows users to review these results for a specific precinct or political contest. To review election results, simply enter an address or voting precinct in the search box.  The precinct will then be highlighted on the map and results for each political contest displayed in a tab along the bottom of the map. <br/><br/>",
+    SplashScreenMessage: "<b>Election Results</b> <br/> <hr/> <br/> The <b>Election Results</b> application provides election results information to the general public and other interested parties. It offers a map-based view of results tabulated on election night and allows users to review these results for a specific region or political contest. To review election results, simply click on the region of choice.  The region will then be highlighted on the map and results for each political contest displayed in a tab along the bottom of the map. <br/><br/>",
 
     // Set URL of help page/portal
     HelpURL: "help.htm",
@@ -62,22 +62,22 @@ dojo.declare("js.config", null, {
 		       [
                    {
                        Key: "baseMapKey",
-                       MapURL: "http://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer"
+                       MapURL: "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer"
                    }
 		       ],
 
 
     // Initial map extent. Use comma (,) to separate values and dont delete the last comma
-                   DefaultExtent: "-604606.5024533856,728181.70515211,375684.5024533856,1284457.95",
+                   DefaultExtent: "-672254.730406999,647030.6224958445,778745.6635667797,1315906.413864245",
 
     // ------------------------------------------------------------------------------------------------------------------------
     // OPERATIONAL DATA SETTINGS
     // ------------------------------------------------------------------------------------------------------------------------
-                   // Choose if you want to use WebMap or Map Services for operational layers
+    // Choose if you want to use WebMap or Map Services for operational layers
     UseWebmap: false,
 
     // if using WebMap, specify WebMapID within quotes, otherwise leave this empty and configure operational layers
-    WebMapId: "743b9b9daa484f20abfce912c2230b78",
+    WebMapId: "652967a782c24986925dea8d68038b39",
 
     // if using WebMap, rest of the operational data settings will be pickedup from WebMap excluding the highlight color for precinct and the display property for the reference overlay layer
     // To highlight precinct with custom color set "UseColor" property to "true"
@@ -97,20 +97,20 @@ dojo.declare("js.config", null, {
     PrecinctLayer:
           {
               Key: "precinctLayer",
-              ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/0",
+              ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/arcgis/rest/services/Presidential_Constituency_Level/FeatureServer/0",
               UseColor: true,
               Color: "#FFFC17",
               Alpha: 0.50,
               Query: "UPPER(NAME) LIKE '%${0}%'",
               PrecinctName: "NAME",
-              County: "COUNTY"
+              County: "TOWNSHIP"
           },
 
     // ServiceUrl is the REST end point for the reference overlay layer
     // DisplayOnLoad setting this will show the reference overlay layer on load
     ReferenceOverlayLayer:
           {
-              ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer",
+              ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/arcgis/rest/services/Presidential_Constituency_Level/FeatureServer",
               DisplayOnLoad: true
           },
 
@@ -129,10 +129,10 @@ dojo.declare("js.config", null, {
     LocatorFields: "SingleLine",
 
     // Set default address to search
-    LocatorDefaultAddress: "628 South Loomis Street, Naperville, IL, 60540",
+    LocatorDefaultAddress: "",
 
     //Set default precinct to search
-    LocatorDefaultPrecinct: "Lisle 12",
+    LocatorDefaultPrecinct: "Offinso-South",
 
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -166,20 +166,35 @@ dojo.declare("js.config", null, {
               POULayer:
                     {
                         HeaderColor: "#393939",
-                        Title: "President of Ghana",
-                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/arcgis/rest/services/PresidentofGhana2008/FeatureServer/0",
-                        ChartData: ["NUMVOTES1", "NUMVOTES2", "NUMVOTES3", "NUMVOTES4", "NUMVOTES5", "NUMVOTES6", "NUMVOTES7", "NUMVOTES8"],
+                        Title: "1996",
+                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/arcgis/rest/services/Presidential_Constituency_Level/FeatureServer/0",
+                        ChartData: ["NUMVOTES1", "NUMVOTES2", "NUMVOTES3" ],
                         ChartType: "barchart",
-                        PartyDetails: ["PARTY1", "PARTY2", "PARTY3", "PARTY4", "PARTY5", "PARTY6", "PARTY7", "PARTY8"],
-                        CandidateNames: ["CANDIDATE1", "CANDIDATE2", "CANDIDATE3", "CANDIDATE4", "CANDIDATE5", "CANDIDATE6", "CANDIDATE7", "CANDIDATE8"],
+                        PartyDetails: ["PARTY1", "PARTY2", "PARTY3"],
+                        CandidateNames: ["CANDIDATE1", "CANDIDATE2", "CANDIDATE3"],
+                        DisplayOnLoad: true,
+                        TotalBallots: "TOTBALLOTS"
+                    },
+
+                  
+
+                    Senate24thDistrict:
+                    {
+                        HeaderColor: "#393939",
+                        Title: "2000",
+                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/Presidential_Constituency_Level/FeatureServer/1",
+                        ChartData: ["NUMVOTES1", "NUMVOTES2", "NUMVOTES3", "NUMVOTES4", "NUMVOTES5", "NUMVOTES6", "NUMVOTES7"],
+                        ChartType: "barchart",
+                        PartyDetails: ["PARTY1", "PARTY2", "PARTY3", "PARTY4", "PARTY5", "PARTY6", "PARTY7"],
+                        CandidateNames: ["CANDIDATE1", "CANDIDATE2", "CANDIDATE3", "CANDIDATE4", "CANDIDATE5", "CANDIDATE6", "CANDIDATE7"],
                         DisplayOnLoad: false,
                         TotalBallots: "TOTBALLOTS"
                     },
-              Senate24thDistrict:
+                    Senate42ndDistrict:
                     {
                         HeaderColor: "#393939",
-                        Title: "President of Ghana RunOff",
-                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/1",
+                        Title: "2000 R/O",
+                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/Presidential_Constituency_Level/FeatureServer/2",
                         ChartData: ["NUMVOTES1", "NUMVOTES2"],
                         ChartType: "barchart",
                         PartyDetails: ["PARTY1", "PARTY2"],
@@ -187,11 +202,11 @@ dojo.declare("js.config", null, {
                         DisplayOnLoad: false,
                         TotalBallots: "TOTBALLOTS"
                     },
-              Senate42ndDistrict:
+                    Senate48thDistrict:
                     {
                         HeaderColor: "#393939",
-                        Title: "President of Ghana RunOff by Const.",
-                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/PresidentofGhana2008/FeatureServer/2",
+                        Title: "2008 R/O",
+                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/Presidential_Constituency_Level/FeatureServer/3",
                         ChartData: ["NUMVOTES1", "NUMVOTES2"],
                         ChartType: "barchart",
                         PartyDetails: ["PARTY1", "PARTY2"],
@@ -199,73 +214,31 @@ dojo.declare("js.config", null, {
                         DisplayOnLoad: false,
                         TotalBallots: "TOTBALLOTS"
                     },
-              Senate48thDistrict:
+                    
+
+                    WillCountyRecorderofDeeds4:
                     {
                         HeaderColor: "#393939",
-                        Title: "Senate 48th District",
-                        ServiceUrl: "http://yourserver/ArcGIS/rest/services/ElectionResults/MapServer/3",
-                        ChartData: ["NUMVOTES1"],
-                        ChartType: "barchart",
-                        PartyDetails: ["PARTY1"],
-                        CandidateNames: ["CANDIDATE1"],
-                        DisplayOnLoad: false,
-                        TotalBallots: "TOTBALLOTS"
-                    },
-              USHouseofRepresentatives13thDistrict:
-                    {
-                        HeaderColor: "#393939",
-                        Title: "US House of Representatives 13th District",
-                        ServiceUrl: "http://yourserver/ArcGIS/rest/services/ElectionResults/MapServer/4",
-                        ChartData: ["NUMVOTES1", "NUMVOTES2", "NUMVOTES3", "NUMVOTES4"],
-                        ChartType: "barchart",
-                        PartyDetails: ["PARTY1", "PARTY2", "PARTY3", "PARTY4"],
-                        CandidateNames: ["CANDIDATE1", "CANDIDATE2", "CANDIDATE3", "CANDIDATE4"],
-                        DisplayOnLoad: false,
-                        TotalBallots: "TOTBALLOTS"
-                    },
-              DupageCountyRecorderofDeeds:
-                    {
-                        HeaderColor: "#393939",
-                        Title: "Dupage County Recorder of Deeds",
-                        ServiceUrl: "http://yourserver/ArcGIS/rest/services/ElectionResults/MapServer/5",
-                        ChartData: ["NUMVOTES1", "NUMVOTES2"],
-                        ChartType: "barchart",
-                        PartyDetails: ["PARTY1", "PARTY2"],
-                        CandidateNames: ["CANDIDATE1", "CANDIDATE2"],
-                        DisplayOnLoad: false,
-                        TotalBallots: "TOTBALLOTS"
-                    },
-              WillCountyRecorderofDeeds:
-                    {
-                        HeaderColor: "#393939",
-                        Title: "Will County Recorder of Deeds",
-                        ServiceUrl: "http://yourserver/ArcGIS/rest/services/ElectionResults/MapServer/6",
-                        ChartData: ["NUMVOTES1", "NUMVOTES2"],
-                        ChartType: "barchart",
-                        PartyDetails: ["PARTY1", "PARTY2"],
-                        CandidateNames: ["CANDIDATE1", "CANDIDATE2"],
-                        DisplayOnLoad: false,
-                        TotalBallots: "TOTBALLOTS"
-                    },
-              VoterTurnout:
-                    {
-                        HeaderColor: "#393939",
-                        Title: "Voter Turnout",
-                        ServiceUrl: "http://yourserver/ArcGIS/rest/services/ElectionResults/MapServer/7",
+                        Title: "Turn Out R/O",
+                        ServiceUrl: "https://services1.arcgis.com/m9p5y180BqMf6JT7/ArcGIS/rest/services/Presidential_Constituency_Level/FeatureServer/4",
                         ChartData: ["PERCVOTE"],
                         DisplayOnLoad: false,
                         ChartType: "piechart"
                     }
+
+                    
+
+             
           },
 
 
     //Set the color for different parties
     ColorCodeOfParties:
 		 {
-		     "NPP": { "Color": "#243F78" },
-		     "NDC": { "Color": "#B0321C" },
+		     "NDC": { "Color": "#FF0000" },
+		     "NPP": { "Color": "#00008B" },
 		     "CPP": { "Color": "#006400" },
-		     "Others": { "Color": "#ffffff" }
+		     "Others": { "Color": "#FFFFFF" }
 		 },
 
     //Set the color for those who voted
@@ -285,7 +258,7 @@ dojo.declare("js.config", null, {
 		      // Set time format
 		      FormatTimeAs: "HH:mm:ss",
 		      //Specify the field name for last update
-		      FieldName: "LASTUPDATE"
+		      FieldName: "none"
 		  },
 
     // ------------------------------------------------------------------------------------------------------------------------

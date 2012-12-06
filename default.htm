@@ -1,17 +1,17 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Election Results</title>
+    <title>Presidential Election Results</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <link rel="shortcut icon" href="images/favicon.ico" />
+    <link rel="shortcut icon" href="images/Joy1.png" />
     <link id="stylesheet" href='http://serverapi.arcgisonline.com/jsapi/arcgis/2.8/js/dojo/dojox/mobile/themes/iPhone/iPhone.css'
         rel='stylesheet' />
     <link href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.6/js/dojo/dojox/mobile/themes/buttons.css"
         rel="stylesheet" />
     <link href="styles/electionResults.css" rel="stylesheet" type="text/css" />
     <link rel="Stylesheet" id="dynamicStyleSheet" />
-    <link rel="apple-touch-icon" href="images/AppShortcutIcon.png" />
+    <link rel="apple-touch-icon" href="images/Legend.png" />
     <script type="text/javascript">
         djConfig = {
             parseOnLoad: true,
@@ -276,7 +276,7 @@
                 dojo.addClass(mapSlider[0], "roundedCorner");
             }
 
-            dojo.byId('divSplashScreenContainer').style.display = "block";
+            dojo.byId('divSplashScreenContainer').style.display = "none";
 
             dojo.addClass(dojo.byId('divSplashScreenDialog'), "divSplashScreenDialogContent");
             dojo.replaceClass("divSplashScreenDialog", "showContainer", "hideContainer");
@@ -465,10 +465,8 @@
                     }
                     dojo.byId("trElectionResults").appendChild(td);
                     dojo.byId("trElectionContest").appendChild(candidateLinktd);
-                    
-					map.addLayer(CreateFeatureLayer(index, electionResultData[index].ServiceUrl));
+                    map.addLayer(CreateFeatureLayer(index, electionResultData[index].ServiceUrl));
 					//map.addLayer(CreateDynamicMapServiceLayer(index, electionResultData[index].ServiceUrl));
-
                     if (electionResultData[index].DisplayOnLoad && !currentSelectedLayer) {
                         ShowDynamicMap(index);
                         currentSelectedPrecinct = electionResultData[index].Title;
@@ -595,7 +593,7 @@
                                         Address
                                     </td>
                                     <td id="tdSearchPrecinct" class="tdSearchByUnSelectedPrecinct" onclick="SearchByPrecinct();">
-                                        Precinct
+                                        Region
                                     </td>
                                     <td style="width: 20px;">
                                     </td>

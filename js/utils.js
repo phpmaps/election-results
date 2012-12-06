@@ -356,7 +356,7 @@ function SearchByPrecinct() {
     setTimeout(function () {
         dojo.byId('txtAddress').focus();
     }, 500);
-    dojo.byId("tdSearchTitle").innerHTML = "Search Precinct";
+    dojo.byId("tdSearchTitle").innerHTML = "Search Region";
     RemoveChildren(dojo.byId('tblAddressResults'));
     RemoveScrollBar(dojo.byId("divAddressScrollContainer"));
     dojo.byId("txtAddress").value = dojo.byId("txtAddress").getAttribute("defaultPrecinct");
@@ -735,7 +735,7 @@ function FetchElectionResultInformation(index, precinctName) {
             dojo.replaceClass("divElectionResultsView", "opacityShowAnimation", "opacityHideAnimation");
             dojo.replaceClass("divElectionContenderDetails", "showContainer", "hideContainer");
 
-            dojo.byId("tdListHeader").innerHTML = "Precinct: " + precinctName;
+            dojo.byId("tdListHeader").innerHTML = "Region: " + precinctName;
 
             SetHeightElectionResults();
             map.infoWindow.hide();
@@ -814,19 +814,19 @@ function ShowBarChart(jsonValues, chartDiv, myLabelSeriesarray, myParallelLabelS
     barChart.addAxis("x",
   { stroke: "white",
       includeZero: true,
-      minorTicks: true,
+      minorTicks: false,
       majorTickStep: 25,
       majorLabels: true,
       minorLabels: false,
       fontColor: "white",
-      microTicks: true,
+      microTicks: false,
       //      from: 0, to: 100,
       min: 25, max: 100
   });
 
     barChart.addAxis("y",
     { labels: myLabelSeriesarray,
-        fontColor: "red",
+        fontColor: "white",
         stroke: "white",
         natural: false, majorTickStep: 1, minorTicks: false,
         fixUpper: false,
@@ -835,7 +835,7 @@ function ShowBarChart(jsonValues, chartDiv, myLabelSeriesarray, myParallelLabelS
 
     barChart.addAxis("other x", { leftBottom: false, labels: false });
 
-    barChart.addAxis("other y", { vertical: true, labels:true,
+    barChart.addAxis("other y", { vertical: true,
         leftBottom: false,
         fontColor: "white",
         minorTicks: false,
@@ -958,6 +958,8 @@ function CreateDynamicMapServiceLayer(layerId, layerURL) {
     return dynamicMapService;
 }
 
+
+
 //Function to create Feature map services
 
 function CreateFeatureLayer(layerId, layerURL) {
@@ -971,10 +973,10 @@ function CreateFeatureLayer(layerId, layerURL) {
         //var featLayer = layerURL.substring(0, lastindex);
         featureMapService = new esri.layers.FeatureLayer(layerURL, {
             id: layerId,
-            opacity: 0.6,
+            opacity: 0.7,
 			outFields: ["*"],
 			mode: esri.layers.FeatureLayer.MODE_ONDEMAND,
-            visible: true
+            visible:false
         });
     }
     else {
@@ -989,6 +991,8 @@ function CreateFeatureLayer(layerId, layerURL) {
     }
     return featureMapService;
 }
+
+
 
 //function to show Dynamic map service
 function ShowDynamicMap(key) {
@@ -1022,7 +1026,7 @@ function ShowInfoWindow(mapPoint, precintName) {
             alert(dojo.string.substitute(messages.getElementsByTagName("noContest")[0].childNodes[0].nodeValue, [currentSelectedPrecinct]));
             return;
         }
-        dojo.byId("tdTitle").innerHTML = "Precinct - " + features.features[0].attributes[precinctLayer.PrecinctName];
+        dojo.byId("tdTitle").innerHTML = "Region - " + features.features[0].attributes[precinctLayer.PrecinctName];
         map.setExtent(CenterMapPoint(mapPoint, features.features[0].geometry.getExtent().expand(4)));
         selectedGraphic = mapPoint;
 

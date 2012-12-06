@@ -162,7 +162,7 @@ function FindPrecinctLayer(mapPoint, precintName, showBottomPanel) {
                 map.getLayer(precinctLayer.Key)._mode._removeFeatureIIf(removeOID);
             }
             
-            dojo.byId("spanAddress").innerHTML = "Precinct - " + features[0].attributes[precinctLayer.PrecinctName];
+            dojo.byId("spanAddress").innerHTML = "Region - " + features[0].attributes[precinctLayer.PrecinctName];
 
             if (!isMobileDevice) {
                 
@@ -326,7 +326,7 @@ function PopulateChartData(chartType, chartData, partyDetails, chartDiv, feature
             for (var i in chartData) {
                 var votes = features.features[0].attributes[chartData[i]];
                 var candidateName = features.features[0].attributes[candidateNames[i]];
-                var percentVote = votes .toFixed(0) + "-" + ((votes / totalBallots) * 100).toFixed(2) + "%";
+                var percentVote = votes .toFixed(0) + "--(" + ((votes / totalBallots) * 100).toFixed(2) + "%"+")";
                 if (candidateName && candidateName != "") {
                     var jsonItem = {};
                     jsonItem.label = candidateName;
